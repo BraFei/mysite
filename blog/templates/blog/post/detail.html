@@ -1,0 +1,58 @@
+{% extends "blog/base.html" %}
+{% load blog_tags %}
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ post.title }}</h1>
+  <p class="date">
+    Published {{ post.publish }} by {{ post.author }}
+  </p>
+    <!--post.body|linebreaks-->
+    {{ post.body|markdown }}
+    <p>
+        <a href="{% url "blog:post_share" post.id %}">
+            Share this post
+        </a>
+    </p>
+
+    <!--   推荐相似帖子专区   -->
+    <h2>Similar posts</h2>
+        {% for post in similar_posts %}
+            <p>
+              <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+            </p>
+        {% empty %}
+            There are no similar posts yet.
+      {% endfor %}
+
+    <!--   评论专区      -->
+    <!-- with模板（template）标签（tag）是非常有用的，可以避免直接操作数据库或避免多次调用花费较多的方法。-->
+    {% with comments.count as total_comments %}
+    <h2>
+        {{ total_comments }} comment{{ total_comments|pluralize }}
+    </h2>
+    {% endwith %}
+
+    {% for comment in comments %}
+    <div class="comment">
+        <p class="info">
+            Comment {{ forloop.counter }} by {{ comment.name }}
+            {{ comment.created }}
+        </p>
+        {{ comment.body|linebreaks }}
+    </div>
+    {% empty %}
+        <p>There are no comments yet.</p>
+    {% endfor %}
+    {% if new_comment %}
+        <h2>Your comment has been added.</h2>
+    {% else %}
+        <h2>Add a new comment</h2>
+        <form action="." method="post">
+            {{ comment_form.as_p }}
+            {% csrf_token %}
+            <p><input type="submit" value="Add comment"></p>
+        </form>
+{% endif %}
+
+{% endblock %}
